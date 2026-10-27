@@ -26,6 +26,7 @@ node_modules
 .coverage
 htmlcov
 dist
+**/dist
 build
 coverage
 **/*.log

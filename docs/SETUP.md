@@ -1,12 +1,32 @@
 # Setup and secrets plan
 
-Prepared 26 October 2026. Commands/configuration for deployment will be generated and checked during implementation; this repository is not runnable yet.
+Updated 26 October 2026. Milestone 1 runs locally in Docker. The Ubuntu VM, remote access and self-hosted secrets service remain deployment plans.
 
 ## 1. Development computer
 
-Git is already available on the user's Mac. Docker Desktop is not present in the standard Applications folder and docker is not on the current shell PATH. Install Docker Desktop for Apple Silicon using the official installer, launch it and complete its first-run setup. Verify `docker version` and `docker compose version` in Terminal.
+Git and Docker Desktop are installed on the user's Apple Silicon Mac. The Docker engine and Compose were verified during milestone 1. The current shell may not include Docker's CLI directory; for that Terminal session run:
 
-The planned Docker development workflow will provide Python and Node.js in containers. Installing host Python, Node.js, an IDE or GitHub CLI is optional, not a prerequisite. Do not replace macOS's system Python.
+```sh
+export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
+docker version
+docker compose version
+```
+
+Launch Docker Desktop before running the app. From the repository, run:
+
+```sh
+docker compose up --build -d --wait app
+```
+
+Open http://localhost:8000. To run the isolated backend tests:
+
+```sh
+docker compose --profile test run --build --rm test
+```
+
+The app binds to localhost only and uses the persistent `fpl-assistant_app_data` Docker volume. Workspace name/notes survive app restarts. The seed is fictional and never replaces existing notes. See the README for port overrides, API endpoints, storage, shutdown commands and the current feature boundaries.
+
+The Docker workflow provides Python and Node.js in containers. Installing host Python, Node.js, an IDE or GitHub CLI is optional, not a prerequisite. Do not replace macOS's system Python.
 
 Download: https://docs.docker.com/desktop/setup/install/mac-install/
 
@@ -67,6 +87,6 @@ Sources:
 
 ## 5. Implementation sequence
 
-Prepare local Docker development first; create the VM and secrets service alongside app development. Secrets management must not block development with synthetic data. Implement the milestones in IMPLEMENTATION_BRIEF.md, then build/test for the server architecture, deploy and verify persistence plus backup restoration.
+Local Docker development and the synthetic demo are implemented. Next, add validated file imports/manual corrections, followed by independent saved drafts and prediction. Create the VM and secrets service alongside app development. Secrets management must not block development with synthetic data. Before deploying, build/test for the server architecture and verify private access, persistence and backup restoration.
 
-Pending user setup details: final VM IP, chosen Ubuntu LTS, GitHub repository URL, and preferred private-access URL/tunnel. These do not block writing the first local app.
+Pending user setup details: final VM IP, chosen Ubuntu LTS, GitHub repository URL, and preferred private-access URL/tunnel. These do not block local development.
