@@ -6,7 +6,7 @@ RUN npm ci
 COPY frontend/ ./
 RUN npm run build
 
-FROM python:3.13-slim-bookworm@sha256:fa16c23a012723c24eef39cc755a27babbba16b711e5d1e6cf16225ad21637cd AS backend
+FROM python:3.13-slim-trixie AS backend
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 WORKDIR /app
 COPY backend/requirements.txt ./
@@ -21,6 +21,7 @@ COPY backend/tests ./tests
 CMD ["python", "-m", "pytest", "-q", "tests"]
 
 FROM backend AS runtime
+RUN python -m pip uninstall --yes pip
 RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --no-create-home app && mkdir -p /data && chown app:app /data
 COPY --from=frontend /web/dist ./static
 ENV DATA_DIR=/data STATIC_DIR=/app/static
