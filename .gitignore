@@ -1,0 +1,46 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+secrets/
+.secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*cookies*.json
+
+# Private snapshots, persistent data and backups
+data/
+snapshots/
+backups/
+*.sqlite
+*.sqlite3
+*.sqlite*
+*.db
+*.db-*
+*.sql
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Frontend/build outputs
+node_modules/
+dist/
+build/
+coverage/
+*.log
+
+# Local editor and OS files
+.DS_Store
+.idea/
+.vscode/

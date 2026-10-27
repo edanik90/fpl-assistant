@@ -1,0 +1,72 @@
+# Setup and secrets plan
+
+Prepared 26 October 2026. Commands/configuration for deployment will be generated and checked during implementation; this repository is not runnable yet.
+
+## 1. Development computer
+
+Git is already available on the user's Mac. Docker Desktop is not present in the standard Applications folder and docker is not on the current shell PATH. Install Docker Desktop for Apple Silicon using the official installer, launch it and complete its first-run setup. Verify `docker version` and `docker compose version` in Terminal.
+
+The planned Docker development workflow will provide Python and Node.js in containers. Installing host Python, Node.js, an IDE or GitHub CLI is optional, not a prerequisite. Do not replace macOS's system Python.
+
+Download: https://docs.docker.com/desktop/setup/install/mac-install/
+
+## 2. Local project and GitHub
+
+The local repository is /Users/edt_90/Documents/Codex/fpl-assistant. Add that folder as a local project in Codex, named FPL Assistant. If using Edit project > Add folder, make this folder primary. Keep the implementation brief available to future chats.
+
+Create a private GitHub repository named fpl-assistant under the intended personal account. Leave README, .gitignore and license initialization unchecked because local files already exist. A remote URL and authenticated Git connection are needed before publishing the local repository. No remote has been created or configured by this setup work.
+
+GitHub stores source code and reviewed templates. Personal snapshots, the SQLite database, plaintext credentials and secret-manager backups stay out of Git. A private repository is not a secrets vault. GitHub Actions secrets are unnecessary until a CI/deployment workflow needs them.
+
+References:
+- https://learn.chatgpt.com/docs/projects
+- https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository
+
+## 3. Proxmox VM
+
+Suggested initial VM: Ubuntu Server 24.04 LTS, 4 vCPU, 8 GB RAM and 60 GB SSD-backed disk. This is a starting allocation for the app plus Infisical and its dependencies; measure usage and adjust. Docker also supports Ubuntu 26.04 LTS, so either supported LTS is technically suitable.
+
+Create a QEMU VM in Proxmox, upload/mount the official Ubuntu Server ISO, install Ubuntu with OpenSSH, and reserve a stable LAN IP. Install/enable the QEMU guest agent and enable its corresponding Proxmox setting. Apply OS updates. Install Docker Engine and the Compose plugin from Docker's official apt repository in the VM. Docker Desktop is for the Mac, not required in the server VM.
+
+Use separate Compose projects for the FPL app and Infisical. Keep services private, with a deliberate HTTPS or SSH-tunnel access route. Do not publish PostgreSQL/Redis ports to the LAN. Docker-published ports need explicit access controls; do not assume UFW alone restricts them.
+
+Sources:
+- https://ubuntu.com/download/server
+- https://docs.docker.com/engine/install/ubuntu/
+- https://infisical.com/docs/self-hosting/deployment-options/docker-compose
+
+## 4. Fully self-hosted secrets
+
+Proposed tool: self-hosted Infisical using its core secrets-management functionality. Its Compose deployment runs Infisical, PostgreSQL and Redis. Review the selected version's available roles/licensing before depending on advanced policies or paid features. Pin the reviewed image version rather than following latest automatically.
+
+Create separate projects for development and production if fine-grained environment restrictions are unavailable in the chosen edition. Use a dedicated application machine identity with the minimum available permissions. The deployment client must explicitly target the local Infisical URL; do not leave a cloud default configured.
+
+The first version needs no FPL password, paid-data API key or language-model API key. Add actual secrets only as features require them.
+
+| Information | Storage |
+| --- | --- |
+| Non-secret settings (port, timezone, data path) | Reviewed config / .env.example |
+| Future API keys or application signing secrets | The self-hosted Infisical project |
+| Runtime values required by the backend | Files supplied at startup via Compose secrets, or the application's secret-loader integration |
+| Infisical's own encryption key, auth secret and database credentials | Restricted host bootstrap configuration outside Git |
+| Credential allowing the app to authenticate to Infisical | Restricted host credential file; mounted only into the secret-loader/backend that needs it |
+| Personal FPL snapshots, drafts and SQLite | Persistent app data volume; backed up privately |
+| GitHub authentication / SSH private keys | Developer or deployment user's credential storage; not supplied to the app |
+
+There must be a small amount of bootstrap credential material outside the vault: Infisical cannot fetch the key needed to start itself from its own unavailable API. For example, place its required bootstrap .env at /opt/infisical/.env, outside the code repository, with the owning administrator as its only ordinary reader (`chmod 600`). Keep separate encrypted offline backups of the recovery material. Never keep the only copy of Infisical's encryption key inside Infisical or solely in the same VM.
+
+Docker Compose secrets mount files under /run/secrets. Ordinary Compose does not encrypt the source file on the host; protect its permissions and storage. The app will explicitly implement reading any *_FILE configuration; the suffix is not automatic Docker behavior. Do not bake secrets into an image or frontend bundle. Do not print values in logs or commit them in examples.
+
+Back up Infisical's PostgreSQL database and encryption/recovery configuration, plus the app's SQLite database and snapshots. Store backups outside this VM and test restoration. A VM snapshot alone is not the only backup.
+
+Sources:
+- https://infisical.com/docs/self-hosting/overview
+- https://infisical.com/docs/self-hosting/deployment-options/docker-compose
+- https://infisical.com/docs/documentation/platform/identities/universal-auth
+- https://docs.docker.com/compose/how-tos/use-secrets/
+
+## 5. Implementation sequence
+
+Prepare local Docker development first; create the VM and secrets service alongside app development. Secrets management must not block development with synthetic data. Implement the milestones in IMPLEMENTATION_BRIEF.md, then build/test for the server architecture, deploy and verify persistence plus backup restoration.
+
+Pending user setup details: final VM IP, chosen Ubuntu LTS, GitHub repository URL, and preferred private-access URL/tunnel. These do not block writing the first local app.
