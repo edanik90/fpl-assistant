@@ -1,0 +1,49 @@
+name: Optional CodeQL
+
+# Private personal repositories on GitHub Free/Pro are not eligible.
+# Enable only after verifying CodeQL licensing and repository availability.
+on:
+  pull_request:
+  push:
+    branches: [main, initial/demo]
+  workflow_dispatch:
+  schedule:
+    - cron: "41 9 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    if: ${{ vars.ENABLE_CODEQL == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, javascript-typescript]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          queries: security-extended
+      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
+        with:
+          category: /language:${{ matrix.language }}
+          output: codeql-results
+          upload-database: false
+      - name: Fail on high or critical security findings
+        run: python3 .github/scripts/check-codeql-results.py codeql-results
