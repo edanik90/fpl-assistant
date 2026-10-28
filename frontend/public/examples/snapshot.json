@@ -1,0 +1,372 @@
+{
+  "label": "Fictional import example",
+  "season": "2026/27",
+  "gameweek": 10,
+  "captured_at": "2026-10-27T12:00:00Z",
+  "kind": "deadline",
+  "bootstrap": {
+    "teams": [
+      {
+        "id": 1,
+        "name": "Northbridge",
+        "short_name": "NOR"
+      },
+      {
+        "id": 2,
+        "name": "Riverside",
+        "short_name": "RIV"
+      },
+      {
+        "id": 3,
+        "name": "Harbour City",
+        "short_name": "HAR"
+      },
+      {
+        "id": 4,
+        "name": "Kingsford",
+        "short_name": "KIN"
+      },
+      {
+        "id": 5,
+        "name": "Westhaven",
+        "short_name": "WES"
+      },
+      {
+        "id": 6,
+        "name": "Eastfield",
+        "short_name": "EAS"
+      },
+      {
+        "id": 7,
+        "name": "Southbank",
+        "short_name": "SOU"
+      },
+      {
+        "id": 8,
+        "name": "Moorland",
+        "short_name": "MOO"
+      }
+    ],
+    "elements": [
+      {
+        "id": 1,
+        "first_name": "Ari",
+        "second_name": "Vale",
+        "web_name": "Vale",
+        "team": 1,
+        "element_type": 1,
+        "now_cost": 45
+      },
+      {
+        "id": 2,
+        "first_name": "Ben",
+        "second_name": "Reed",
+        "web_name": "Reed",
+        "team": 2,
+        "element_type": 1,
+        "now_cost": 40
+      },
+      {
+        "id": 3,
+        "first_name": "Noah",
+        "second_name": "Hart",
+        "web_name": "Hart",
+        "team": 1,
+        "element_type": 2,
+        "now_cost": 55
+      },
+      {
+        "id": 4,
+        "first_name": "Theo",
+        "second_name": "Moss",
+        "web_name": "Moss",
+        "team": 3,
+        "element_type": 2,
+        "now_cost": 50
+      },
+      {
+        "id": 5,
+        "first_name": "Leo",
+        "second_name": "Shaw",
+        "web_name": "Shaw",
+        "team": 4,
+        "element_type": 2,
+        "now_cost": 45
+      },
+      {
+        "id": 6,
+        "first_name": "Jack",
+        "second_name": "Lane",
+        "web_name": "Lane",
+        "team": 5,
+        "element_type": 2,
+        "now_cost": 40
+      },
+      {
+        "id": 7,
+        "first_name": "Luca",
+        "second_name": "Reed",
+        "web_name": "Reed",
+        "team": 6,
+        "element_type": 2,
+        "now_cost": 40
+      },
+      {
+        "id": 8,
+        "first_name": "Eli",
+        "second_name": "Brooks",
+        "web_name": "Brooks",
+        "team": 1,
+        "element_type": 3,
+        "now_cost": 95
+      },
+      {
+        "id": 9,
+        "first_name": "Finn",
+        "second_name": "Cole",
+        "web_name": "Cole",
+        "team": 3,
+        "element_type": 3,
+        "now_cost": 80
+      },
+      {
+        "id": 10,
+        "first_name": "Kai",
+        "second_name": "Bennett",
+        "web_name": "Bennett",
+        "team": 2,
+        "element_type": 3,
+        "now_cost": 70
+      },
+      {
+        "id": 11,
+        "first_name": "Owen",
+        "second_name": "Hale",
+        "web_name": "Hale",
+        "team": 4,
+        "element_type": 3,
+        "now_cost": 60
+      },
+      {
+        "id": 12,
+        "first_name": "Max",
+        "second_name": "Ellis",
+        "web_name": "Ellis",
+        "team": 5,
+        "element_type": 3,
+        "now_cost": 50
+      },
+      {
+        "id": 13,
+        "first_name": "Sam",
+        "second_name": "Rivers",
+        "web_name": "Rivers",
+        "team": 6,
+        "element_type": 4,
+        "now_cost": 80
+      },
+      {
+        "id": 14,
+        "first_name": "Alex",
+        "second_name": "Rowan",
+        "web_name": "Rowan",
+        "team": 7,
+        "element_type": 4,
+        "now_cost": 75
+      },
+      {
+        "id": 15,
+        "first_name": "Jude",
+        "second_name": "West",
+        "web_name": "West",
+        "team": 8,
+        "element_type": 4,
+        "now_cost": 55
+      },
+      {
+        "id": 16,
+        "first_name": "Oscar",
+        "second_name": "Quinn",
+        "web_name": "Quinn",
+        "team": 7,
+        "element_type": 1,
+        "now_cost": 50
+      },
+      {
+        "id": 17,
+        "first_name": "Miles",
+        "second_name": "Stone",
+        "web_name": "Stone",
+        "team": 8,
+        "element_type": 2,
+        "now_cost": 48
+      },
+      {
+        "id": 18,
+        "first_name": "Felix",
+        "second_name": "Gray",
+        "web_name": "Gray",
+        "team": 6,
+        "element_type": 3,
+        "now_cost": 65
+      },
+      {
+        "id": 19,
+        "first_name": "Evan",
+        "second_name": "Birch",
+        "web_name": "Birch",
+        "team": 3,
+        "element_type": 4,
+        "now_cost": 72
+      },
+      {
+        "id": 20,
+        "first_name": "Robin",
+        "second_name": "Ash",
+        "web_name": "Ash",
+        "team": 7,
+        "element_type": 3,
+        "now_cost": 58
+      }
+    ]
+  },
+  "fixtures": [
+    {
+      "id": 1,
+      "event": 10,
+      "team_h": 1,
+      "team_a": 3,
+      "kickoff_time": null
+    },
+    {
+      "id": 2,
+      "event": 10,
+      "team_h": 2,
+      "team_a": 4,
+      "kickoff_time": null
+    },
+    {
+      "id": 3,
+      "event": 10,
+      "team_h": 6,
+      "team_a": 5,
+      "kickoff_time": null
+    },
+    {
+      "id": 4,
+      "event": 10,
+      "team_h": 7,
+      "team_a": 8,
+      "kickoff_time": null
+    }
+  ],
+  "team": {
+    "picks": [
+      {
+        "element": 1,
+        "position": 1,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 3,
+        "position": 2,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 4,
+        "position": 3,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 5,
+        "position": 4,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 8,
+        "position": 5,
+        "is_captain": true,
+        "is_vice_captain": false
+      },
+      {
+        "element": 9,
+        "position": 6,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 10,
+        "position": 7,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 11,
+        "position": 8,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 12,
+        "position": 9,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 13,
+        "position": 10,
+        "is_captain": false,
+        "is_vice_captain": true
+      },
+      {
+        "element": 14,
+        "position": 11,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 2,
+        "position": 12,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 6,
+        "position": 13,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 7,
+        "position": 14,
+        "is_captain": false,
+        "is_vice_captain": false
+      },
+      {
+        "element": 15,
+        "position": 15,
+        "is_captain": false,
+        "is_vice_captain": false
+      }
+    ]
+  },
+  "player_histories": [
+    {
+      "history": [
+        {
+          "element": 1,
+          "fixture": 1,
+          "opponent_team": 3,
+          "round": 10,
+          "minutes": 90,
+          "total_points": 6,
+          "expected_goals": "0.00"
+        }
+      ]
+    }
+  ]
+}

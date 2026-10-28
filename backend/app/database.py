@@ -29,6 +29,21 @@ def make_engine(path: Path) -> Engine:
 def migrate(engine: Engine) -> None:
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).resolve().parents[1] / "alembic"))
-    with engine.begin() as connection:
-        config.attributes["connection"] = connection
-        command.upgrade(config, "head")
+    # SQLite batch migrations rebuild referenced tables. Disable FK enforcement
+    # only on this startup connection, outside a transaction, then verify all rows.
+    with engine.connect() as connection:
+        connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
+        connection.commit()
+        try:
+            with connection.begin():
+                # Python's SQLite legacy transaction mode does not BEGIN for
+                # DDL. Start explicitly so a failed rebuild rolls back tables
+                # and the Alembic revision together, including CREATE TABLE.
+                connection.exec_driver_sql("BEGIN")
+                config.attributes["connection"] = connection
+                command.upgrade(config, "head")
+                if connection.exec_driver_sql("PRAGMA foreign_key_check").first():
+                    raise RuntimeError("Foreign key validation failed after migration")
+        finally:
+            connection.exec_driver_sql("PRAGMA foreign_keys=ON")
+            connection.commit()

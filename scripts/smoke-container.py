@@ -78,6 +78,39 @@ def main():
             "saved=json.load(urllib.request.urlopen(request)); "
             "print(json.dumps({'workspace':saved,'snapshot':data['snapshot']}))"
         ))
+        imported = json.loads(execute("""
+import json, urllib.request, urllib.error
+base = 'http://127.0.0.1:8000'
+def read(path):
+    return json.load(urllib.request.urlopen(base + path))
+def write(path, payload):
+    request = urllib.request.Request(base + path, data=json.dumps(payload).encode(),
+        headers={'Content-Type': 'application/json', 'Origin': base}, method='POST')
+    return json.load(urllib.request.urlopen(request))
+bundle = read('/examples/snapshot.json')
+data = write('/api/imports', bundle)
+assert data['snapshot']['bank_tenths'] is None
+assert data['picks'][0]['selling_price_tenths'] is None
+assert data['history_count'] == 1
+snapshot_id = data['snapshot']['id']
+original = read(f'/api/snapshots/{snapshot_id}/original')
+values = dict(bank_tenths=17, free_transfers=2, transfer_hits=0, chip='none', picks=data['picks'])
+values['picks'][0]['purchase_price_tenths'] = 43
+values['picks'][0]['selling_price_tenths'] = 44
+saved = write(f'/api/snapshots/{snapshot_id}/corrections',
+    dict(expected_revision=0, reason='Runtime persistence verification', values=values))
+assert saved['correction_revision'] == 1
+assert read(f'/api/snapshots/{snapshot_id}/original') == original
+bundle['bootstrap']['elements'][0]['now_cost'] = -1
+try:
+    write('/api/imports', bundle)
+    raise AssertionError('Invalid import succeeded')
+except urllib.error.HTTPError as error:
+    assert error.code == 422
+assert read('/api/overview') == saved
+assert len(read('/api/snapshots')) == 2
+print(json.dumps(saved))
+"""))
         docker("stop", "--time", "10", container)
         docker("rm", container)
         start()
@@ -85,8 +118,8 @@ def main():
             "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8000/api/overview').read().decode())"
         ))
         assert persisted["workspace"] == result["workspace"], "Workspace changed during replacement"
-        assert persisted["snapshot"] == result["snapshot"], "Demo seed changed during replacement"
-        print("PASS: startup, migrations, native modules, static assets, writes and persistence after container replacement.")
+        assert persisted == imported, "Imported snapshot, corrections or selection changed during replacement"
+        print("PASS: startup, migrations, native modules, static assets, JSON import, atomic validation, immutable originals, corrections and persistence after container replacement.")
     except Exception:
         print(docker("logs", container, check=False).stdout)
         raise
