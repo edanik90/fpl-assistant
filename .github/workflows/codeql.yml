@@ -1,49 +1,168 @@
-name: Optional CodeQL
+name: CI and security
 
-# Private personal repositories on GitHub Free/Pro are not eligible.
-# Enable only after verifying CodeQL licensing and repository availability.
+# No path filters: the aggregate check must run for every pull request.
 on:
   pull_request:
   push:
     branches: [main, initial/demo]
   workflow_dispatch:
   schedule:
-    - cron: "41 9 * * 1"
+    - cron: "23 9 * * 1"
 
 permissions:
   contents: read
 
 concurrency:
-  group: codeql-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  analyze:
-    name: CodeQL (${{ matrix.language }})
-    if: ${{ vars.ENABLE_CODEQL == 'true' }}
+  backend:
+    name: Backend tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      security-events: write
-      packages: read
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [python, javascript-typescript]
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
+      - name: Build and test without runtime networking
+        run: |
+          docker build --target test --tag fpl-assistant-tests .
+          docker run --rm --network none fpl-assistant-tests
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          languages: ${{ matrix.language }}
-          build-mode: none
-          queries: security-extended
-      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          category: /language:${{ matrix.language }}
-          output: codeql-results
-          upload-database: false
-      - name: Fail on high or critical security findings
-        run: python3 .github/scripts/check-codeql-results.py codeql-results
+          node-version: "22"
+          package-manager-cache: false
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+
+  dependencies:
+    name: Dependency audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Install pinned audit tools
+        run: python -m pip install -r .github/requirements-security.txt
+      - name: Audit production and test Python dependencies
+        run: |
+          pip-audit --strict --disable-pip --no-deps -r backend/requirements.txt
+          pip-audit --strict --disable-pip --no-deps -r backend/requirements-dev.txt
+          pip-audit --strict --disable-pip --no-deps -r .github/requirements-security.txt
+      - name: Audit frontend production and development dependencies
+        working-directory: frontend
+        run: npm audit --package-lock-only --audit-level=high
+
+  static-analysis:
+    name: Static security analysis
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -r .github/requirements-security.txt
+      - name: Test the CodeQL finding threshold
+        run: python -m unittest discover -s .github/scripts -p 'test_*.py'
+      - name: Check Python application code
+        run: bandit -r backend/app backend/alembic -ll
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install checksum-verified Gitleaks CLI
+        run: bash .github/scripts/install-gitleaks.sh
+      - name: Scan complete checked-out Git history with redacted output
+        run: gitleaks git --redact --no-banner --log-opts="--all" .
+
+  container:
+    name: Container security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Build the actual runtime image
+        run: docker build --target runtime --tag fpl-assistant-security .
+      - name: Test the actual runtime and persistent volume
+        run: python3 scripts/smoke-container.py --image fpl-assistant-security
+      - name: Save the complete vulnerability report
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_IGNOREFILE: /dev/null
+        with:
+          version: v0.76.1
+          image-ref: fpl-assistant-security
+          scanners: vuln
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: "0"
+          format: json
+          output: trivy-results.json
+          cache: false
+          timeout: 10m
+      - name: Block unaccepted high and critical findings
+        run: >-
+          trivy image --scanners vuln --severity HIGH,CRITICAL
+          --ignore-unfixed=false --ignorefile .trivyignore.yaml
+          --format table --output ''
+          --show-suppressed --exit-code 1 --timeout 10m --no-progress
+          fpl-assistant-security
+      - name: Retain the complete report even when the gate fails
+        if: ${{ always() && hashFiles('trivy-results.json') != '' }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: container-security-${{ github.run_id }}-${{ github.run_attempt }}
+          path: trivy-results.json
+          retention-days: 14
+
+  gate:
+    name: PR gate
+    if: ${{ always() }}
+    needs: [backend, frontend, dependencies, static-analysis, secrets, container]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Fail unless every required job succeeded
+        env:
+          JOB_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          jobs = json.loads(os.environ["JOB_RESULTS"])
+          failed = [name for name, job in jobs.items() if job["result"] != "success"]
+          if failed:
+              print("Required jobs did not succeed: " + ", ".join(failed))
+              sys.exit(1)
+          print("All required CI and security jobs passed.")
+          PY
