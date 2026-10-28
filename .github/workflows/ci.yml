@@ -145,7 +145,6 @@ jobs:
           name: container-security-${{ github.run_id }}-${{ github.run_attempt }}
           path: trivy-results.json
           retention-days: 14
-#
   gate:
     name: PR gate
     if: ${{ always() }}
