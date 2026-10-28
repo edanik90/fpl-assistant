@@ -33,7 +33,7 @@ Start with an explainable baseline: shrink recent xG/xA rates toward longer-term
 Compare proposed transfers against a no-transfer baseline over the same horizon. Account for bank, sales, player prices, squad/club limits, free transfers, hits, captaincy and the future value of retaining transfers. Backtest using only information available at each historical decision point. Show expected points and uncertainty rather than claiming an objective universal team rating.
 
 ## Milestones
-
+#
 1. Runnable Docker app, SQLite migrations, health check and synthetic demonstration data.
 2. Validated snapshot import and manual squad/budget corrections.
 3. Persistent drafts and transfer/formation/captaincy validation.
