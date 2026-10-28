@@ -19,6 +19,7 @@ FROM backend AS test
 COPY backend/requirements-dev.txt ./
 RUN pip install --no-cache-dir -r requirements-dev.txt
 COPY backend/tests ./tests
+COPY frontend/public/examples ./examples
 CMD ["python", "-m", "pytest", "-q", "tests"]
 
 FROM backend AS runtime-files

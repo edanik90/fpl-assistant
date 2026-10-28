@@ -29,7 +29,7 @@ def test_migrations_are_repeatable_and_match_models(settings):
         migrate(engine)
         migrate(engine)
         with engine.connect() as connection:
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0001_initial"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0002_imports"
             assert compare_metadata(MigrationContext.configure(connection), Base.metadata) == []
             assert connection.scalar(text("PRAGMA foreign_keys")) == 1
     finally:
@@ -37,7 +37,7 @@ def test_migrations_are_repeatable_and_match_models(settings):
 
 
 def test_health_and_demo_integrity(client):
-    assert client.get("/api/health").json() == {"status": "ok", "database": "ok", "schema_revision": "0001_initial"}
+    assert client.get("/api/health").json() == {"status": "ok", "database": "ok", "schema_revision": "0002_imports"}
     data = client.get("/api/overview").json()
     assert data["snapshot"]["source"] == "synthetic"
     assert data["snapshot"]["created_at"].endswith("+00:00")

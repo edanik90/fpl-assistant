@@ -2,7 +2,7 @@
 
 A private, single-user Fantasy Premier League planning app, designed for Docker on a local computer and eventually an Ubuntu VM on Proxmox.
 
-**Milestone 1 is implemented:** a FastAPI API, React interface, SQLite migrations, persistent workspace notes, a health check, and entirely fictional demonstration data. No FPL login, API keys, external data requests, or upstream team changes are involved.
+**Milestones 1 and 2 are implemented:** a FastAPI API, React interface, SQLite persistence, fictional demonstration data, validated local JSON snapshot imports, and versioned manual squad/budget corrections. No FPL login, API keys, external data requests, or upstream team changes are involved.
 
 ## Run locally
 
@@ -23,7 +23,10 @@ export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 ## What works
 
 - A 15-player demo squad in pitch and list views, with captain, vice-captain, and ordered bench.
-- A searchable 20-player fictional catalogue with position filters and price sorting.
+- A searchable catalogue with position filters and price sorting, using the demo or selected imported snapshot.
+- Local JSON imports of bootstrap catalogue, fixtures, team picks and optional player match histories, with atomic validation and persistent snapshot selection.
+- Manual actual-squad, bank, ownership-price, free-transfer, hit and chip corrections, with immutable originals and revision history. Missing values stay unknown.
+- A downloadable fictional import example. See [the import guide](docs/IMPORTS.md) for file formats and the complete workflow.
 - Player details showing current price and, for squad members, individual purchase and selling prices.
 - An editable workspace name and planning notes, saved in SQLite and retained across restarts and container replacement.
 - Automatic Alembic migrations and an idempotent demo seed.
@@ -31,7 +34,7 @@ export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 
 The sample season/gameweek, clubs, players, prices, and fixtures are illustrative, not live FPL information. Prices use integer units of £0.1 million. Dates are stored in UTC and shown in the browser's timezone.
 
-**Not implemented yet:** file imports, manual squad/budget corrections, transfer drafts, lineup changes, prediction/optimisation, authentication, or server deployment. The demo lineup is read only. Workspace notes are not a transfer draft.
+**Not implemented yet:** independent transfer drafts, season-specific squad/formation/transfer validation, prediction/optimisation, authentication, or server deployment. Manual corrections record the actual team; workspace notes and corrections are not transfer drafts.
 
 ## Verify
 
@@ -43,7 +46,7 @@ docker compose ps
 
 The test container has no network access and uses temporary databases. Tests cover migrations/schema agreement, seeding, demo integrity, search, input validation, cross-origin write rejection, database failures, static serving, and persistence across new app instances. TypeScript checking and the production frontend build run during the image build.
 
-See [the milestone 1 verification record](docs/VERIFICATION.md) for the checks completed on this Mac and their limits.
+See [the verification record](docs/VERIFICATION.md) for the checks completed on this Mac and their limits.
 
 To check the actual data volume, save a note in the browser, run `docker compose restart app`, reload the page, and verify the note is still present. `docker compose down` removes containers while preserving data. **Do not use `docker compose down -v` unless you intend to delete the saved workspace.**
 
@@ -59,7 +62,8 @@ docker compose up -d --wait app
 
 - Health: `/api/health` (queries the database and migration revision; returns HTTP 503 when unavailable).
 - API documentation: `/api/docs`.
-- Overview: `GET /api/overview`.
+- Overview: `GET /api/overview` (selected snapshot plus effective corrections).
+- Snapshot imports, selection, originals and corrections: [API details](docs/IMPORTS.md#versioning-and-failure-behavior).
 - Catalogue: `GET /api/players?position=MID&q=Brooks`.
 - Workspace: `PUT /api/workspace` with JSON `name` and `notes`.
 
@@ -80,9 +84,8 @@ Production and test Python dependency versions are fully pinned in `backend/requ
 
 ## Next milestones
 
-1. Validated JSON snapshot imports and manual corrections.
-2. Independent saved drafts with budget, transfer and lineup validation.
-3. Explainable expected points and affordable transfer suggestions.
-4. Ubuntu VM deployment, private access and verified backup restoration.
+1. Independent saved drafts with budget, transfer and lineup validation (milestone 3).
+2. Explainable expected points and affordable transfer suggestions.
+3. Ubuntu VM deployment, private access and verified backup restoration.
 
 The [implementation brief](docs/IMPLEMENTATION_BRIEF.md) defines the complete scope. The [setup plan](docs/SETUP.md) describes the future VM and self-hosted secrets service. No secrets are required for the demo.

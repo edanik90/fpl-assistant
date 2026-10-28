@@ -1,6 +1,6 @@
 # Implementation brief
 
-Agreed on 26 October 2026. This is the full product specification. Milestone 1 is implemented; later milestones remain planned. See README.md for the current runnable feature set and verification commands.
+Agreed on 26 October 2026. This is the full product specification. Milestones 1 and 2 are implemented; later milestones remain planned. See README.md for the current runnable feature set and verification commands.
 
 ## User and hosting
 

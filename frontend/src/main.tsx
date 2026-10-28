@@ -28,34 +28,30 @@ import type {
   Workspace,
 } from "./types";
 import "./styles.css";
+import { request } from "./api";
+import { DataWorkspace } from "./DataWorkspace";
 
 const positions: Position[] = ["GK", "DEF", "MID", "FWD"];
-const money = (value: number) => `£${(value / 10).toFixed(1)}m`;
+const money = (value: number | null) =>
+  value === null ? "Unknown" : `£${(value / 10).toFixed(1)}m`;
 const date = (value: string) =>
   new Date(value).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   });
 
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, options);
-  if (!response.ok)
-    throw new Error(
-      response.status === 422
-        ? "Check the workspace name and notes, then try again."
-        : "The app could not complete this request. Check that it is running and try again.",
-    );
-  return response.json() as Promise<T>;
-}
-
 function opponent(player: Player, fixtures: Fixture[]) {
-  const fixture = fixtures.find(
+  const matches = fixtures.filter(
     (f) => f.home_code === player.club_code || f.away_code === player.club_code,
   );
-  return fixture
-    ? fixture.home_code === player.club_code
-      ? `${fixture.away_code} (H)`
-      : `${fixture.home_code} (A)`
+  return matches.length
+    ? matches
+        .map((f) =>
+          f.home_code === player.club_code
+            ? `${f.away_code} (H)`
+            : `${f.home_code} (A)`,
+        )
+        .join(", ")
     : "No fixture";
 }
 
@@ -124,14 +120,14 @@ function PlayerDetail({
         {player.club} · {player.position}
       </span>
       <h2 id="player-title">{player.name}</h2>
-      <p className="muted">Fictional player · demonstration data</p>
+      <p className="muted">Catalogue player · snapshot data</p>
       <dl className="detail-stats">
         <div>
           <dt>Current price</dt>
           <dd>{money(player.price_tenths)}</dd>
         </div>
         <div>
-          <dt>Example fixture</dt>
+          <dt>Snapshot fixture</dt>
           <dd>{opponent(player, fixtures)}</dd>
         </div>
         {pick && (
@@ -148,8 +144,8 @@ function PlayerDetail({
         )}
       </dl>
       <p className="info-note">
-        {pick ? "This player is in your demo squad. " : ""}Transfer editing and
-        expected points will be added in later milestones.
+        {pick ? "This player is in your selected squad. " : ""}Transfer editing
+        and expected points will be added in later milestones.
       </p>
       <button className="button primary full" onClick={close}>
         Back to workspace
@@ -161,7 +157,9 @@ function PlayerDetail({
 function App() {
   const [data, setData] = useState<Overview | null>(null);
   const [error, setError] = useState("");
-  const [page, setPage] = useState<"squad" | "players" | "workspace">("squad");
+  const [page, setPage] = useState<"squad" | "players" | "workspace" | "data">(
+    "squad",
+  );
   const [view, setView] = useState<"pitch" | "list">("pitch");
   const [selected, setSelected] = useState<Player | null>(null);
   const [search, setSearch] = useState("");
@@ -191,6 +189,9 @@ function App() {
   useEffect(() => {
     void load();
   }, []);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [page]);
   useEffect(() => {
     if (!dirty) return;
     const warn = (event: BeforeUnloadEvent) => {
@@ -320,7 +321,14 @@ function App() {
                     <span className="position-label">{player.position}</span>
                   </td>
                   <td className="numeric">{money(player.price_tenths)}</td>
-                  <td>{opponent(player, data?.fixtures ?? [])}</td>
+                  <td>
+                    {opponent(
+                      player,
+                      data?.fixtures.filter(
+                        (f) => f.gameweek === data.snapshot.gameweek,
+                      ) ?? [],
+                    )}
+                  </td>
                   <td>
                     {pick ? (
                       <span className="squad-tag">
@@ -360,6 +368,9 @@ function App() {
     );
   }
 
+  const demo = data?.snapshot.source === "synthetic";
+  const fixtures =
+    data?.fixtures.filter((f) => f.gameweek === data.snapshot.gameweek) ?? [];
   const picks =
     data?.picks.map((pick) => ({
       ...pick,
@@ -428,6 +439,13 @@ function App() {
             <Settings2 size={19} />
             Workspace
           </button>
+          <button
+            onClick={() => setPage("data")}
+            aria-current={page === "data" ? "page" : undefined}
+          >
+            <Database size={19} />
+            Data & imports
+          </button>
         </nav>
         <div className="sidebar-bottom">
           <div className="private-note">
@@ -437,7 +455,7 @@ function App() {
           </div>
           <div className="local-status">
             <span className="status-dot" />
-            Local workspace <span className="version">v0.1</span>
+            Local workspace <span className="version">v0.2</span>
           </div>
         </div>
       </aside>
@@ -449,7 +467,7 @@ function App() {
           </div>
           <span className="demo-badge">
             <span />
-            DEMO DATA
+            {demo ? "DEMO DATA" : "LOCAL SNAPSHOT"}
           </span>
         </header>
         <main>
@@ -480,21 +498,26 @@ function App() {
                 <div>
                   <div className="eyebrow">
                     SEASON {data.snapshot.season}{" "}
-                    <span className="eyebrow-dot">·</span> DEMONSTRATION
+                    <span className="eyebrow-dot">·</span>{" "}
+                    {demo ? "DEMONSTRATION" : `SNAPSHOT #${data.snapshot.id}`}
                   </div>
                   <h1>
                     {page === "squad"
                       ? "A clearer view of your squad."
                       : page === "players"
                         ? "Find your next possibility."
-                        : "Make this space yours."}
+                        : page === "data"
+                          ? "Your data, in your hands."
+                          : "Make this space yours."}
                   </h1>
                   <p>
                     {page === "squad"
                       ? "Your starting XI, your bench, and a little room to plan ahead."
                       : page === "players"
-                        ? "Explore the fictional player catalogue and inspect individual prices."
-                        : "Keep your planning notes close and see where your data lives."}
+                        ? "Explore your selected player catalogue and inspect individual prices."
+                        : page === "data"
+                          ? "Import a snapshot, confirm the details, and keep a clear record."
+                          : "Keep your planning notes close and see where your data lives."}
                   </p>
                 </div>
                 {page === "squad" && (
@@ -510,18 +533,16 @@ function App() {
               <div className="demo-notice">
                 <Database size={16} />
                 <span>
-                  You’re exploring a sample squad. All players, clubs, and
-                  fixtures are fictional.
+                  {demo
+                    ? "You’re exploring a sample squad. All players, clubs, and fixtures are fictional."
+                    : `${data.snapshot.label} · ${data.snapshot.kind} snapshot · captured ${date(data.snapshot.captured_at!)}${data.correction_revision ? ` · corrected (revision ${data.correction_revision})` : ""}`}
                 </span>
                 <span className="notice-end">No FPL account connected</span>
               </div>
 
               {page === "squad" && (
                 <>
-                  <section
-                    className="stats-grid"
-                    aria-label="Demo squad summary"
-                  >
+                  <section className="stats-grid" aria-label="Squad summary">
                     <div className="stat">
                       <span>
                         Squad value <Users size={16} />
@@ -534,24 +555,28 @@ function App() {
                           ),
                         )}
                       </strong>
-                      <small>Current demo player prices</small>
+                      <small>Current catalogue prices</small>
                     </div>
                     <div className="stat">
                       <span>
                         In the bank <Wallet size={16} />
                       </span>
                       <strong>{money(data.snapshot.bank_tenths)}</strong>
-                      <small>Sample available balance</small>
+                      <small>Confirmed balance, or unknown</small>
                     </div>
                     <div className="stat">
                       <span>
                         Free transfers <ArrowRight size={16} />
                       </span>
                       <strong>
-                        {data.snapshot.free_transfers}
-                        <em>available</em>
+                        {data.snapshot.free_transfers ?? "Unknown"}
+                        <em>
+                          {data.snapshot.free_transfers === null
+                            ? "confirm in Data & imports"
+                            : "available"}
+                        </em>
                       </strong>
-                      <small>Transfer editing coming next</small>
+                      <small>Transfer drafts coming next</small>
                     </div>
                     <div className="stat">
                       <span>
@@ -565,7 +590,7 @@ function App() {
                     <section className="card squad-card">
                       <div className="card-header">
                         <div>
-                          <h2>Your demo squad</h2>
+                          <h2>Your selected squad</h2>
                           <p>
                             Gameweek {data.snapshot.gameweek} <span>·</span>{" "}
                             Select a player to explore
@@ -624,7 +649,7 @@ function App() {
                                       </div>
                                       <strong>{p.player.short_name}</strong>
                                       <small>
-                                        {opponent(p.player, data.fixtures)}
+                                        {opponent(p.player, fixtures)}
                                       </small>
                                     </button>
                                   ))}
@@ -646,13 +671,11 @@ function App() {
                                     onClick={() => setSelected(p.player)}
                                     aria-label={`View ${p.player.name}, substitute`}
                                   >
-                                    <span className="bench-order">
-                                      {i === 0 ? "GK" : i}
-                                    </span>
+                                    <span className="bench-order">{i + 1}</span>
                                     <Shirt color={p.player.color} small />
                                     <strong>{p.player.short_name}</strong>
                                     <small>
-                                      {opponent(p.player, data.fixtures)}
+                                      {opponent(p.player, fixtures)}
                                     </small>
                                   </button>
                                 ))}
@@ -665,9 +688,7 @@ function App() {
                       <div className="card-foot">
                         <span className="captain-key">C</span> Captain{" "}
                         <span className="captain-key vice">V</span> Vice-captain{" "}
-                        <span className="foot-right">
-                          Example lineup · read only
-                        </span>
+                        <span className="foot-right">Snapshot lineup</span>
                       </div>
                     </section>
                     <aside className="right-rail">
@@ -683,13 +704,13 @@ function App() {
                           <div>
                             <h2>On the fixture board</h2>
                             <p>
-                              Gameweek {data.snapshot.gameweek} · fictional
+                              Gameweek {data.snapshot.gameweek} · snapshot
                               fixtures
                             </p>
                           </div>
                         </div>
                         <div className="fixture-list">
-                          {data.fixtures.map((f) => (
+                          {fixtures.map((f) => (
                             <div className="fixture" key={f.id}>
                               <span>
                                 {f.home_club}
@@ -709,11 +730,11 @@ function App() {
                         <span className="eyebrow">UP NEXT</span>
                         <h3>Your team, brought into focus.</h3>
                         <p>
-                          Snapshot imports and saved transfer drafts are the
-                          next steps for this workspace.
+                          Bring in a local JSON snapshot and confirm your squad
+                          and budget before planning ahead.
                         </p>
-                        <button onClick={() => setPage("workspace")}>
-                          See what’s included <ArrowRight size={15} />
+                        <button onClick={() => setPage("data")}>
+                          Manage snapshots <ArrowRight size={15} />
                         </button>
                       </div>
                     </aside>
@@ -763,7 +784,9 @@ function App() {
                   <div className="result-count" role="status">
                     {filteredPlayers.length}{" "}
                     {filteredPlayers.length === 1 ? "player" : "players"}{" "}
-                    <span>· Fictional catalogue</span>
+                    <span>
+                      · {demo ? "Fictional catalogue" : "Imported catalogue"}
+                    </span>
                   </div>
                   {playerTable(filteredPlayers)}
                 </section>
@@ -793,7 +816,9 @@ function App() {
                       <dl className="data-list">
                         <div>
                           <dt>Source</dt>
-                          <dd>Synthetic demo</dd>
+                          <dd>
+                            {demo ? "Synthetic demo" : "Local JSON import"}
+                          </dd>
                         </div>
                         <div>
                           <dt>Created</dt>
@@ -815,8 +840,8 @@ function App() {
                         </div>
                       </dl>
                       <p className="info-note">
-                        Notes persist in the app’s SQLite database. Demo data is
-                        separate from your notes and is only seeded once.
+                        Notes, snapshots and correction history persist in the
+                        app’s SQLite database on your local server.
                       </p>
                     </section>
                     <section className="card workspace-card">
@@ -824,11 +849,11 @@ function App() {
                       <ul className="included-list">
                         <li>
                           <Check size={16} />
-                          Demo squad and player library
+                          Snapshot squad and player library
                         </li>
                         <li>
                           <Check size={16} />
-                          Saved workspace name and notes
+                          JSON imports and manual corrections
                         </li>
                         <li>
                           <Check size={16} />
@@ -836,14 +861,22 @@ function App() {
                         </li>
                       </ul>
                       <p className="info-note">
-                        Next: file imports, manual corrections, saved drafts,
-                        and explainable predictions. These features are not
-                        available yet.
+                        Next: independent saved transfer drafts, season rules
+                        and lineup validation, then explainable predictions.
                       </p>
                     </section>
                   </div>
                 </div>
               )}
+              <div hidden={page !== "data"}>
+                <DataWorkspace
+                  data={data}
+                  onChange={(result) => {
+                    setData(result);
+                    setSelected(null);
+                  }}
+                />
+              </div>
               <footer>
                 <span>
                   FPL Assistant <span className="footer-dot">·</span> Made for a
@@ -861,7 +894,7 @@ function App() {
         <PlayerDetail
           player={selected}
           pick={data.picks.find((p) => p.player_id === selected.id)}
-          fixtures={data.fixtures}
+          fixtures={fixtures}
           close={() => setSelected(null)}
         />
       )}

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, CheckConstraint, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -16,8 +16,12 @@ class Snapshot(Base):
     season: Mapped[str] = mapped_column(String(20))
     gameweek: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[str] = mapped_column(String(40))
-    bank_tenths: Mapped[int] = mapped_column(Integer)
-    free_transfers: Mapped[int] = mapped_column(Integer)
+    label: Mapped[str | None] = mapped_column(String(80))
+    captured_at: Mapped[str | None] = mapped_column(String(40))
+    kind: Mapped[str | None] = mapped_column(String(20))
+    import_data: Mapped[dict | None] = mapped_column(JSON)
+    bank_tenths: Mapped[int | None] = mapped_column(Integer)
+    free_transfers: Mapped[int | None] = mapped_column(Integer)
 
 
 class Player(Base):
@@ -53,15 +57,17 @@ class Pick(Base):
     slot: Mapped[int] = mapped_column(Integer)
     is_captain: Mapped[bool] = mapped_column(Boolean)
     is_vice_captain: Mapped[bool] = mapped_column(Boolean)
-    purchase_price_tenths: Mapped[int] = mapped_column(Integer)
-    selling_price_tenths: Mapped[int] = mapped_column(Integer)
+    purchase_price_tenths: Mapped[int | None] = mapped_column(Integer)
+    selling_price_tenths: Mapped[int | None] = mapped_column(Integer)
 
 
 class Fixture(Base):
     __tablename__ = "fixtures"
     id: Mapped[int] = mapped_column(primary_key=True)
     snapshot_id: Mapped[int] = mapped_column(ForeignKey("snapshots.id"))
-    gameweek: Mapped[int] = mapped_column(Integer)
+    gameweek: Mapped[int | None] = mapped_column(Integer)
+    source_fixture_id: Mapped[int | None] = mapped_column(Integer)
+    kickoff_time: Mapped[str | None] = mapped_column(String(40))
     home_club: Mapped[str] = mapped_column(String(60))
     home_code: Mapped[str] = mapped_column(String(3))
     away_club: Mapped[str] = mapped_column(String(60))
@@ -75,3 +81,21 @@ class Workspace(Base):
     name: Mapped[str] = mapped_column(String(60))
     notes: Mapped[str] = mapped_column(Text)
     updated_at: Mapped[str] = mapped_column(String(40))
+
+
+class Selection(Base):
+    __tablename__ = "selection"
+    __table_args__ = (CheckConstraint("id = 1"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    snapshot_id: Mapped[int] = mapped_column(ForeignKey("snapshots.id"))
+
+
+class Correction(Base):
+    __tablename__ = "corrections"
+    __table_args__ = (UniqueConstraint("snapshot_id", "revision"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    snapshot_id: Mapped[int] = mapped_column(ForeignKey("snapshots.id"))
+    revision: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[str] = mapped_column(String(40))
+    reason: Mapped[str] = mapped_column(String(500))
+    values: Mapped[dict] = mapped_column(JSON)

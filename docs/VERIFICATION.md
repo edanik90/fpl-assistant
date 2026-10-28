@@ -48,3 +48,27 @@ Completed checks:
 Scans used the vulnerability database downloaded on 28 October 2026. Results can change as advisories or detection rules change. CPython's source-built interpreter is tracked by its official image digest and `/usr/local/share/fpl-runtime/inventory.json`; copied Debian library versions remain in dpkg status records. These results do not establish that the application is free of all security issues. Server deployment and backup restoration are still pending.
 
 The workflow now retains the complete unfiltered scan as an artifact, then applies the blocking policy separately with package-scoped, expiring exceptions supported. No vulnerability risk acceptance was applied during this work. See SECURITY.md for the decision and review process.
+
+## Milestone 2 verification — 28 October 2026
+
+Implemented on `codex/snapshot-imports`, based on merged `origin/main` (`1c38c70`).
+
+- Backend suite: **41 passed**, including strict/atomic imports, source references, missing versus confirmed-zero money, history retention, deduplication, snapshot isolation, stale correction rejection, offline persistence, populated milestone 1 upgrades, and rollback of schema/revision/data when a migration fails. The existing upstream Starlette TestClient deprecation warning remains.
+- TypeScript checking, `npm ci` and Vite production builds passed for ARM64 and AMD64. npm reported zero vulnerabilities during both final builds. No runtime or development dependency versions were added or changed; the frontend app version is now 0.2.0.
+- Both final production images passed the expanded runtime smoke test: migrations, static example download, JSON import, unknown values, invalid-import rejection, immutable originals, saved corrections, persistent selection and equality of the complete effective overview after container replacement. AMD64 runs under Docker Desktop emulation on this Apple Silicon Mac. Each smoke test used and removed its own disposable volume; the normal app volume was preserved.
+- Trivy 0.76.1 scanned exported archives of both final images using HIGH/CRITICAL severity, `--ignore-unfixed=false`, the repository's empty `.trivyignore.yaml`, and exit code 1: **0 HIGH, 0 CRITICAL; both exited 0**. These are blocking-policy scans, not new full lower-severity reports. The complete-report CI step remains enabled.
+- Bandit: no issues identified. actionlint passed. The existing CodeQL-gate unit suite passed **9 tests**. `git diff --check` passed.
+- Normal Compose app rebuilt, recreated and healthy at `http://localhost:8000`, preserving existing workspace notes and demo data. Health revision is `0002_imports`.
+- A SQLite backup was created before the upgrade in the existing volume: `/data/fpl-assistant.before-m2.20261028T194132Z.sqlite3`. It was created with SQLite's backup API while the old service was running. This does not substitute for the later deployment backup/restore milestone.
+
+Browser checks completed using the tracked fictional import example:
+
+- Selected imported snapshot, provenance and history count displayed correctly; absent budget and ownership prices were unknown.
+- Saved bank £1.7m, two free transfers, and slot 1 purchase/selling prices £4.3m/£4.4m through the correction form; revision 1 and its reason appeared in history and the squad summary updated.
+- Unsaved corrections disabled snapshot switching/importing, survived navigation between pages, and could be discarded.
+- Replacing a player cleared both ownership prices; discarding restored the saved player/prices.
+- Switching to the demo showed revision 0; switching back retained the imported snapshot's revision 1. Loading original values staged unknown fields without saving over the import; those staged edits were discarded.
+- Final app recreation and browser reopen retained the selected snapshot and corrected bank. Existing workspace notes were unchanged. The fictional example and its single verification correction remain available for inspection.
+- At 390 × 844, the import page's document width matched the viewport (390 px); the correction table scrolls within its own container. The temporary viewport override was reset. Final browser logs contained no warnings/errors.
+
+**Verification limit:** browser automation could not open the native file chooser, so the example was loaded through `POST /api/imports` for browser checks. The file chooser and separate-file selection workflow still need a manual browser check. API ingestion, validation and persistence are exercised in both automated suites and the actual runtime. No personal FPL files, account login, upstream requests, GitHub Actions run, or Ubuntu deployment were exercised. Full season-specific squad/formation/transfer/chip legality remains milestone 3 scope; imported season/capture metadata is user supplied and cannot establish cross-file season provenance by itself.

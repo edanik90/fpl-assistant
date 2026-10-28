@@ -1708,3 +1708,144 @@ tbody tr:last-child td {
     scroll-behavior: auto !important;
   }
 }
+
+/* Snapshot imports and corrections share the existing workspace palette. */
+.data-workspace {
+  display: grid;
+  gap: 24px;
+}
+.import-card {
+  padding: 28px;
+  min-width: 0;
+}
+.import-card > .muted {
+  line-height: 1.7;
+  max-width: 850px;
+}
+.plain-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.data-label,
+.data-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-block: 18px;
+}
+.data-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.data-workspace input:not([type="radio"]),
+.data-workspace select {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #dce2d4;
+  border-radius: 8px;
+  background: #fafbf7;
+  color: #293d32;
+  font: inherit;
+}
+.data-workspace input[type="file"] {
+  font-size: 12px;
+}
+.data-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.data-actions a {
+  text-decoration: none;
+}
+.snapshot-metadata {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  font-size: 12px;
+  margin-block: 24px;
+}
+.snapshot-metadata dt {
+  color: #6d786b;
+  margin-bottom: 6px;
+}
+.snapshot-metadata dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.correction-table table {
+  min-width: 780px;
+  width: 100%;
+}
+.correction-table th,
+.correction-table td {
+  padding: 10px 8px;
+}
+.correction-table td:first-child {
+  white-space: nowrap;
+  font-size: 11px;
+}
+.correction-table select {
+  max-width: 350px;
+}
+.correction-table input[type="number"] {
+  min-width: 100px;
+  max-width: 140px;
+}
+.correction-table input[type="radio"] {
+  accent-color: #42634e;
+  width: 18px;
+  height: 18px;
+}
+.correction-history {
+  border-top: 1px solid #e4e8df;
+  padding-top: 20px;
+}
+.correction-history h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.correction-history ol {
+  padding-left: 20px;
+  font-size: 12px;
+  max-height: 240px;
+  overflow: auto;
+}
+.correction-history li {
+  margin-block: 15px;
+}
+.correction-history li p {
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.data-workspace a {
+  color: #365d46;
+}
+.data-workspace .button.primary {
+  color: white;
+}
+[hidden] {
+  display: none !important;
+}
+@media (max-width: 600px) {
+  .import-card {
+    padding: 20px 16px;
+  }
+  .data-fields {
+    gap: 0 14px;
+  }
+  .data-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
