@@ -1,0 +1,3 @@
+# No vulnerability exceptions have been accepted.
+# Add package-scoped, expiring entries only after review; see docs/SECURITY.md.
+vulnerabilities: []

@@ -26,9 +26,11 @@ node_modules
 .coverage
 htmlcov
 dist
+**/dist
 build
 coverage
 **/*.log
+trivy-results.json
 .DS_Store
 .idea
 .vscode

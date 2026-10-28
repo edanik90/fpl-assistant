@@ -1,0 +1,49 @@
+version: 2
+
+# Dependabot reads this file from the repository's default branch.
+# Keep initial/demo as default until main receives this configuration.
+# Version/security PRs are reviewed and tested; there is no auto-merge.
+updates:
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      frontend-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+  - package-ecosystem: pip
+    directories: [/backend, /.github]
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      python-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: America/Chicago
+    open-pull-requests-limit: 3
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: America/Chicago
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns: ["*"]

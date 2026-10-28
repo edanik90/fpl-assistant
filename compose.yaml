@@ -1,0 +1,29 @@
+name: fpl-assistant
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    image: fpl-assistant:local
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    volumes:
+      - app_data:/data
+    restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+  test:
+    profiles: ["test"]
+    build:
+      context: .
+      target: test
+    network_mode: none
+
+volumes:
+  app_data:

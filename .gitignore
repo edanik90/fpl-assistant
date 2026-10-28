@@ -39,6 +39,7 @@ dist/
 build/
 coverage/
 *.log
+trivy-results.json
 
 # Local editor and OS files
 .DS_Store
