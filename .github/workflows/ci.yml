@@ -1,5 +1,5 @@
 name: CI and security
-
+#
 # No path filters: the aggregate check must run for every pull request.
 on:
   pull_request:
