@@ -49,7 +49,7 @@ To check the actual data volume, save a note in the browser, run `docker compose
 
 ## Storage and operation
 
-Docker Compose manages the named volume `fpl-assistant_app_data`, mounted at `/data`. The SQLite file is `/data/fpl-assistant.sqlite3`. The runtime runs as a non-root user with a read-only root filesystem, a writable data volume, and a temporary `/tmp` directory. One worker runs migrations and seed initialization before serving requests.
+Docker Compose manages the named volume `fpl-assistant_app_data`, mounted at `/data`. The SQLite file is `/data/fpl-assistant.sqlite3`. The distroless Python runtime runs as UID/GID 10001 with a read-only root filesystem, a writable data volume, and a temporary `/tmp` directory. One worker runs migrations and seed initialization before serving requests. Build and test tools remain in separate stages; the shipped image has no shell, pip or general-purpose system utilities. Use `/usr/bin/python3` for container diagnostics.
 
 ```sh
 docker compose logs --tail=100 app
@@ -76,7 +76,7 @@ Dockerfile                Frontend build, backend test and runtime targets
 compose.yaml              Local app volume, port binding and isolated tests
 ```
 
-Production and test Python dependency versions are fully pinned in `backend/requirements*.txt`; `requirements.in` records the direct runtime version ranges. The frontend has exact direct versions and `package-lock.json`; Docker uses `npm ci`. Both base images are pinned by multi-architecture digest. The running local build is Linux ARM64; verify the target server architecture before deployment.
+Production and test Python dependency versions are fully pinned in `backend/requirements*.txt`; `requirements.in` records the direct runtime version ranges. The frontend has exact direct versions and `package-lock.json`; Docker uses `npm ci`. All three base images are pinned by multi-architecture digest. See [container security and exceptions](docs/SECURITY.md) for the runtime design, scanner configuration, complete scan artifacts and how to review a specific vulnerability exception.
 
 ## Next milestones
 
@@ -85,4 +85,4 @@ Production and test Python dependency versions are fully pinned in `backend/requ
 3. Explainable expected points and affordable transfer suggestions.
 4. Ubuntu VM deployment, private access and verified backup restoration.
 
-The [implementation brief](docs/IMPLEMENTATION_BRIEF.md) defines the complete scope. The [setup plan](docs/SETUP.md) describes the future VM and self-hosted secrets service. No secrets are required for the demo. No GitHub remote is configured.
+The [implementation brief](docs/IMPLEMENTATION_BRIEF.md) defines the complete scope. The [setup plan](docs/SETUP.md) describes the future VM and self-hosted secrets service. No secrets are required for the demo.

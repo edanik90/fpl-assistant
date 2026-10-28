@@ -114,17 +114,37 @@ jobs:
           persist-credentials: false
       - name: Build the actual runtime image
         run: docker build --target runtime --tag fpl-assistant-security .
-      - name: Scan OS and application packages
+      - name: Test the actual runtime and persistent volume
+        run: python3 scripts/smoke-container.py --image fpl-assistant-security
+      - name: Save the complete vulnerability report
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_IGNOREFILE: /dev/null
         with:
+          version: v0.76.1
           image-ref: fpl-assistant-security
           scanners: vuln
-          severity: HIGH,CRITICAL
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
           ignore-unfixed: false
-          exit-code: "1"
-          format: table
+          exit-code: "0"
+          format: json
+          output: trivy-results.json
           cache: false
           timeout: 10m
+      - name: Block unaccepted high and critical findings
+        run: >-
+          trivy image --scanners vuln --severity HIGH,CRITICAL
+          --ignore-unfixed=false --ignorefile .trivyignore.yaml
+          --format table --output ''
+          --show-suppressed --exit-code 1 --timeout 10m --no-progress
+          fpl-assistant-security
+      - name: Retain the complete report even when the gate fails
+        if: ${{ always() && hashFiles('trivy-results.json') != '' }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: container-security-${{ github.run_id }}-${{ github.run_attempt }}
+          path: trivy-results.json
+          retention-days: 14
 
   gate:
     name: PR gate

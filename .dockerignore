@@ -30,6 +30,7 @@ dist
 build
 coverage
 **/*.log
+trivy-results.json
 .DS_Store
 .idea
 .vscode
