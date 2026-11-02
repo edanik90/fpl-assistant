@@ -26,7 +26,7 @@ FROM backend AS runtime-files
 COPY scripts/prepare-runtime.py /tmp/prepare-runtime.py
 RUN python /tmp/prepare-runtime.py
 
-FROM gcr.io/distroless/cc-debian13:nonroot@sha256:3ee00291cf386ec52a552e6a858d555debd74776eb4bfa53fa3df2cd6677515e AS runtime
+FROM gcr.io/distroless/cc-debian13:nonroot@sha256:08476c244888bfb425bae1ae4dd7c17f093e972aab8426883d97f3c6f280f7c1 AS runtime
 WORKDIR /app
 # Carry the official patched CPython and only required native libraries, with
 # their package metadata. Never purge essentials from a general-purpose Debian OS.
